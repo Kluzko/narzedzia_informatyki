@@ -40,7 +40,3 @@ Program jest narzędziem do wizualizacji danych dotyczących zgonów według prz
 
 ![Screen 1](static/screen_01.png)
 ![Screen 2](static/screen_02.png)
-
-```
-
-```
