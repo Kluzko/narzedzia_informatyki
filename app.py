@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+from database import AgeData, DiseaseData, session
+
 # Ladowanie danych 
 @st.cache_data
 def load_data(file_path):
@@ -18,28 +20,50 @@ def process_data(sheet_df):
     df_disease = pd.DataFrame(columns=disease_columns)
     df_disease.loc[0] = sheet_df.iloc[9, 2:21].values
 
-    return df_age, df_disease
+    return df_age.T, df_disease.T
 
 # Tworzenie wykresu schodkowego
 def create_bar_chart(data, title):
-    data_transposed = data.T
-    data_transposed.columns = ['Count']
-    fig = px.bar(data_transposed, x=data_transposed.index, y='Count')
+   
+    data.columns = ['Count']
+    fig = px.bar(data, x=data.index, y='Count')
     fig.update_layout(title=title, xaxis_title='Age Group', yaxis_title='Count')
     return fig
 
 # Tworzenie wykresu kolowego
 def create_pie_chart(data, title, disease_dict):
-    data_transposed = data.T
-    data_transposed.columns = ['Count']
+    data.columns = ['Count']
 
-    data_transposed['Disease Name'] = data_transposed.index.map(disease_dict)
+    data['Disease Name'] = data.index.map(disease_dict)
 
-    fig = px.pie(data_transposed, names='Disease Name', values='Count', title=title, hover_data=['Count'], labels={'Disease Name': ''})
+    fig = px.pie(data, names='Disease Name', values='Count', title=title, hover_data=['Count'], labels={'Disease Name': ''})
 
     fig.update_layout(showlegend=False)
 
     return fig
+
+def import_sheet_to_db():
+    df_dict = load_data("dane.xlsx")
+    sheet_names = [name for name in df_dict.keys() if name != 'Objaśnienia']
+
+    for sheet_name in sheet_names:
+        df_age, df_disease = process_data(df_dict[sheet_name])
+
+        for index, row in df_age.iterrows():
+            age_data_entry = AgeData(
+                sheet_name=sheet_name,
+                age_group=index,  
+                count=row.values[0] 
+            )
+            session.add(age_data_entry)
+
+        for index, row in df_disease.iterrows():
+            disease_data_entry = DiseaseData(
+                sheet_name=sheet_name,
+                disease_code=index,  
+                count=row.values[0]
+            )
+            session.add(disease_data_entry)
 
 def main():
     df_dict = load_data("dane.xlsx")
@@ -48,6 +72,7 @@ def main():
     disease_info = df_dict["Objaśnienia"].iloc[:19, :2]
     disease_dict = dict(zip(disease_info["s"], disease_info["Rozdziały klasyfikacji ICD-10"]))
 
+    df_age, df_disease = process_data(df_dict["OGÓŁEM"])
     st.title('Zgony według przyczyn w 2020 Roku')
     selected_sheet = st.selectbox('Wybierz arkusz', [sheet for sheet in df_dict.keys() if sheet != 'Objaśnienia'])
 

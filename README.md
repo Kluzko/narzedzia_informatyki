@@ -36,6 +36,8 @@ Aplikacja będzie dostępna pod adresem: http://localhost:8501
 
 Program jest narzędziem do wizualizacji danych dotyczących zgonów według przyczyn w roku 2020, wykorzystującym Pythona oraz biblioteki Streamlit, Pandas i Plotly Express.
 
+Projekt dodatkowo zawiera przykład implementacji bazy danych SQLite przy użyciu SQLAlchemy oraz pokazuje, jak można zaimportować dane z pliku XLSX do bazy danych za pomocą funkcji import_sheet_to_db().
+
 ### Screeny z Programu:
 
 ![Screen 1](static/screen_01.png)
